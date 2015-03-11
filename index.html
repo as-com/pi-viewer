@@ -102,13 +102,13 @@
 		console.log(start, end, chopStart, chopEnd);
 
 		var xhr = new XMLHttpRequest;
-		xhr.responseType = "arraybuffer";
 
 		xhr.onload = function () {
 			decoder.postMessage(xhr.response, [xhr.response]);
 		};
 
 		xhr.open('GET', file, true);
+		xhr.responseType = "arraybuffer";
 		xhr.setRequestHeader('Range', 'bytes=' + start + '-' + end);
 		xhr.send(null);
 
