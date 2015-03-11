@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>5 Billion Digits of Pi</title>
+
+	<link href='//fonts.googleapis.com/css?family=Roboto:400,300,500,700,100|Inconsolata' rel='stylesheet' type='text/css'>
+	<link type="text/css" rel="stylesheet" href="materialize/css/materialize.min.css"  media="screen,projection"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+</head>
+<body>
+	<div class="container">
+		<h1>Pi Viewer<br><small>by Andrew Sun.com</small></h1>
+		<div class="divider"></div>
+		<div class="section">
+			<div class="row">
+				<div class="input-field col s12">
+					<input id="start" type="number" class="validate" min="0" max="5000000000" value="0">
+					<label for="start">Start</label>
+				</div>
+			</div>
+			<div class="row">
+				<div class="input-field col s12">
+					<input id="end" type="number" class="validate" min="0" max="5000000000" value="1000">
+					<label for="end">End</label>
+				</div>
+			</div>
+			<a class="waves-effect waves-light btn-large" onclick="getDigits()" id="go"><i class="mdi-file-cloud-download left"></i>Get Digits</a>
+			<div class="preloader-wrapper small active" id="spinner" style="display:none">
+				<div class="spinner-layer spinner-blue">
+					<div class="circle-clipper left">
+						<div class="circle"></div>
+					</div>
+					<div class="gap-patch">
+						<div class="circle"></div>
+					</div>
+					<div class="circle-clipper right">
+						<div class="circle"></div>
+					</div>
+				</div>
+
+				<div class="spinner-layer spinner-red">
+					<div class="circle-clipper left">
+						<div class="circle"></div>
+					</div>
+					<div class="gap-patch">
+						<div class="circle"></div>
+					</div>
+					<div class="circle-clipper right">
+						<div class="circle"></div>
+					</div>
+				</div>
+
+				<div class="spinner-layer spinner-yellow">
+					<div class="circle-clipper left">
+						<div class="circle"></div>
+					</div>
+					<div class="gap-patch">
+						<div class="circle"></div>
+					</div>
+					<div class="circle-clipper right">
+						<div class="circle"></div>
+					</div>
+				</div>
+
+				<div class="spinner-layer spinner-green">
+					<div class="circle-clipper left">
+						<div class="circle"></div>
+					</div>
+					<div class="gap-patch">
+						<div class="circle"></div>
+					</div>
+					<div class="circle-clipper right">
+						<div class="circle"></div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<div class="divider"></div>
+		<div class="section">
+		<div id="digits" style="font-family: Inconsolata, monospace; font-size: large; word-wrap: break-word;">Digits will load here</div>
+		</div>
+		<div class="divider"></div>
+	</div>
+</div>
+</div>
+
+<script type="text/javascript" src="//cdn.jsdelivr.net/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript" src="materialize/js/materialize.min.js"></script>
+<script>
+	var file = "https://b20ce6f194664507a7f20b2a5ec78ef5cdcb65e7.googledrive.com/host/0B_9UghUk12-TUDRiZFh3WHVUS2c/Pi-5000000000.ycd";
+	var decoder = new Worker("decoder.js");
+	function getDigits() {
+		$("#go").hide();
+		$("#spinner").show();
+
+		var start = 239 + Math.floor(document.getElementById("start").value / 19) * 8;
+		var end = 238 + Math.ceil(document.getElementById("end").value / 19 + 1) * 8;
+		var chopStart = document.getElementById("start").value - Math.floor(document.getElementById("start").value / 19) * 19;
+		var chopEnd = Math.floor(document.getElementById("end").value / 19 + 1) * 19 - document.getElementById("end").value;
+		console.log(start, end, chopStart, chopEnd);
+
+		var xhr = new XMLHttpRequest;
+		xhr.responseType = "arraybuffer";
+
+		xhr.onload = function () {
+			decoder.postMessage(xhr.response, [xhr.response]);
+		};
+
+		xhr.open('GET', file, true);
+		xhr.setRequestHeader('Range', 'bytes=' + start + '-' + end);
+		xhr.send(null);
+
+		decoder.onmessage = function(e) {
+			document.getElementById("digits").innerHTML = e.data.substring(chopStart, e.data.length - chopEnd);
+			$("#go").show();
+			$("#spinner").hide();
+		}
+	}
+</script>
+</body>
+</html>
