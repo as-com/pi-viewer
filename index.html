@@ -52,10 +52,11 @@
 
 		if ($("#start").val() > 0) {
 			var start = Number($("#start").val()) + 2;
+			var end = Number($("#end").val()) + 1;
 		} else {
 			var start = $("#start").val();
+			var end = Number($("#end").val());
 		}
-		var end = Number($("#end").val()) + 1;
 
 		//var effectiveStart = Math.floor(document.getElementById("start").value / 19) * 19;
 		//var effectiveEnd = Math.floor(document.getElementById("end").value / 19 + 1) * 19;
