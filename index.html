@@ -7,92 +7,159 @@
 	<link href='//fonts.googleapis.com/css?family=Roboto:400,300,500,700,100|Inconsolata' rel='stylesheet' type='text/css'>
 	<link type="text/css" rel="stylesheet" href="materialize/css/materialize.min.css"  media="screen,projection"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+	<style>
+	html,
+	body {
+		height: 100%;
+		margin: 0
+	}
+
+	.container {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		/*justify-content: space-between;*/
+	}
+
+	.container div {
+		/*flex: 0 1 auto;*/
+	}
+	.clusterize-content {
+		font-family: Inconsolata, monospace;
+		font-size: large;
+		word-wrap: break-word;
+	}
+	.clusterize-scroll {
+		height: 100%;
+		overflow-y: scroll;
+		flex: 1 1 auto;
+	}
+	h1 {
+		font-size: large;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+	</style>
 </head>
 <body>
 	<div class="container">
-		<h1>Pi Viewer<br><small>by Andrew Sun.com</small></h1>
-		<div class="divider"></div>
-		<div class="section">
-			<form action="javascript:getDigits()">
-				<div class="row">
-					<div class="input-field col s6">
-						<input id="start" type="number" class="validate" min="0" max="999" value="0" onchange="$(document.getElementById('end')).attr('min', Number(this.value) + 1);">
-						<label for="start">Start</label>
+		<div class="top" style="flex: 0 0 auto;">
+			<h1>Pi Viewer by Andrew Sun.com</h1>
+			<div class="divider"></div>
+			<div class="section">
+				<form action="javascript:getDigits()">
+					<div class="row">
+						<div class="input-field col s6">
+							<input id="start" type="number" class="validate" min="0" max="999" value="0" onchange="$(document.getElementById('end')).attr('min', Number(this.value) + 1);">
+							<label for="start">Start</label>
+						</div>
+						<div class="input-field col s6">
+							<input id="end" type="number" class="validate" min="1" max="5000000000" value="1000" onchange="$(document.getElementById('start')).attr('max', Number(this.value) - 1);">
+							<label for="end">End</label>
+						</div>
 					</div>
-					<div class="input-field col s6">
-						<input id="end" type="number" class="validate" min="1" max="5000000000" value="1000" onchange="$(document.getElementById('start')).attr('max', Number(this.value) - 1);">
-						<label for="end">End</label>
-					</div>
-				</div>
-				<button type="submit" class="waves-effect waves-light btn-large" id="go"><i class="mdi-file-cloud-download left"></i>Get Digits</button>
-			</form>
-		</div>
-		<div class="divider"></div>
-		<div class="section">
+					<button type="submit" class="waves-effect waves-light btn-large" id="go"><i class="mdi-file-cloud-download left"></i>Get Digits</button>
+				</form>
+			</div>
+			<div class="divider"></div>
 			<div class="progress" id="progress" style="display:none">
 				<div class="indeterminate" id="progressBar"></div>
 			</div>
-			<div id="digits" style="font-family: Inconsolata, monospace; font-size: large; word-wrap: break-word;">Digits will load here</div>
 		</div>
-		<div class="divider"></div>
+		<!-- <div class="section" style="flex: 1 1 auto;"> -->
+
+		<div id="scrollArea" class="clusterize-scroll">
+			<div id="contentArea" class="clusterize-content">
+				<div class="clusterize-no-data">a</div>
+			</div>
+		</div>
+		<!-- <div id="digits" style="font-family: Inconsolata, monospace; font-size: large; word-wrap: break-word;">Digits will load here</div> -->
+		<!-- </div> -->
+		<!-- <div class="divider"></div> -->
 	</div>
 </div>
 </div>
 
-<script type="text/javascript" src="//cdn.jsdelivr.net/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/jquery/2.1.4/jquery.min.js"></script>
 <script type="text/javascript" src="materialize/js/materialize.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/clusterize.js/0.14.0/clusterize.min.js"></script>
 <script>
-	var file = "https://b20ce6f194664507a7f20b2a5ec78ef5cdcb65e7.googledrive.com/host/0B_9UghUk12-TUDRiZFh3WHVUS2c/Pi-5000000000.plsdontgzipme";
-	//var decoder = new Worker("decoder.js");
-	function getDigits() {
-		$("#progressBar").attr("style", "").attr("class", "indeterminate");
-		$("#go").addClass("disabled").attr("disabled", "true");
-		$("#digits").text("");
-		$("#progress").show();
+var file = "https://b20ce6f194664507a7f20b2a5ec78ef5cdcb65e7.googledrive.com/host/0B_9UghUk12-TUDRiZFh3WHVUS2c/Pi-5000000000.plsdontgzipme";
+var charactersPerLine = 0;
+var $digits = $("#contentArea");
+var $progressBar = $("#progressBar");
+var $go = $("#go");
+var $start = $("#start");
+var $end = $("#end");
+charactersPerLine = 0;
+var initialHeight = $digits.height();
+while ($digits.height() == initialHeight) {
+	$digits.text($digits.text() + "a");
+	charactersPerLine++;
+}
+// charactersPerLine--;
+$digits.text("Digits will load here...");
+//var decoder = new Worker("decoder.js");
+function getDigits() {
+	$progressBar.attr("style", "").attr("class", "indeterminate");
+	$go.addClass("disabled").attr("disabled", "true");
+	$digits.text("");
+	$("#progress").show();
 
-		if ($("#start").val() > 0) {
-			var start = Number($("#start").val()) + 2;
-			var end = Number($("#end").val()) + 1;
-		} else {
-			var start = $("#start").val();
-			var end = Number($("#end").val());
+	if ($("#start").val() > 0) {
+		var start = Number($("#start").val()) + 2;
+		var end = Number($("#end").val()) + 1;
+	} else {
+		var start = $("#start").val();
+		var end = Number($("#end").val());
+	}
+
+	//var effectiveStart = Math.floor(document.getElementById("start").value / 19) * 19;
+	//var effectiveEnd = Math.floor(document.getElementById("end").value / 19 + 1) * 19;
+	//console.log(start, end, effectiveStart, effectiveEnd);
+
+	var xhr = new XMLHttpRequest;
+	xhr.onprogress = updateProgress;
+
+	xhr.onload = function () {
+		//decoder.postMessage(xhr.response, [xhr.response]);
+		var chunks = [];
+		for (var i = 0, charsLength = xhr.response.length; i < charsLength; i += charactersPerLine) {
+			chunks.push("<div>" + xhr.response.substring(i, i + charactersPerLine) + "</div>");
+			// console.log(i)
 		}
 
-		//var effectiveStart = Math.floor(document.getElementById("start").value / 19) * 19;
-		//var effectiveEnd = Math.floor(document.getElementById("end").value / 19 + 1) * 19;
-		//console.log(start, end, effectiveStart, effectiveEnd);
+		$("#progress").hide();
+		// $digits.text(xhr.responseText);
+		var clusterize = new Clusterize({
+			rows: chunks,
+			scrollId: 'scrollArea',
+			contentId: 'contentArea'
+		});
+		$go.removeClass("disabled").removeAttr("disabled");
+	};
 
-		var xhr = new XMLHttpRequest;
-		xhr.onprogress = updateProgress;
+	xhr.open('GET', file, true);
+	//xhr.responseType = "arraybuffer";
+	xhr.setRequestHeader('Range', 'bytes=' + start + '-' + end);
+	xhr.send(null);
 
-		xhr.onload = function () {
-			//decoder.postMessage(xhr.response, [xhr.response]);
-			$("#progress").hide();
-			$("#digits").text(xhr.responseText);
-			$("#go").removeClass("disabled").removeAttr("disabled");
-		};
-
-		xhr.open('GET', file, true);
-		//xhr.responseType = "arraybuffer";
-		xhr.setRequestHeader('Range', 'bytes=' + start + '-' + end);
-		xhr.send(null);
-
-		// decoder.onmessage = function(e) {
-		// 	//document.getElementById("digits").innerHTML = e.data.substring(effectiveStart - document.getElementById("start").value, e.data.length - (effectiveEnd - document.getElementById("end").value));
-		// 	document.getElementById("digits").innerHTML = e.data;
-		// 	$("#go").show();
-		// 	$("#spinner").hide();
-		// }
+	// decoder.onmessage = function(e) {
+	// 	//document.getElementById("digits").innerHTML = e.data.substring(effectiveStart - document.getElementById("start").value, e.data.length - (effectiveEnd - document.getElementById("end").value));
+	// 	document.getElementById("digits").innerHTML = e.data;
+	// 	$("#go").show();
+	// 	$("#spinner").hide();
+	// }
+}
+function updateProgress(e) {
+	var percentComplete = (e.loaded / $end.val() - $start.val()) * 100;
+	console.log(percentComplete);
+	if (e.lengthComputable || percentComplete != 0) {
+		$("#progressBar").attr("class", "determinate").width(percentComplete + "%");
+	} else {
+		$progressBar.attr("style", "").attr("class", "indeterminate");
 	}
-	function updateProgress(e) {
-		var percentComplete = (e.loaded / e.total) * 100; 
-		console.log(percentComplete);
-		if (e.lengthComputable || percentComplete != 0) {  
-			$("#progressBar").attr("class", "determinate").width(percentComplete + "%");
-		} else {
-			$("#progressBar").attr("style", "").attr("class", "indeterminate");
-		}
-	}
+}
 </script>
 </body>
 </html>
